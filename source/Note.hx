@@ -22,8 +22,8 @@ class Note extends FlxSprite
 	public var wasGoodHit:Bool = false;
 	public var isGlowing:String = (Config.noteGlow) ? "fpsPlus" : "shared";
 	public var prevNote:Note;
-	public var modifiedByLua:Bool = false;
 
+	public var modifiedByLua:Bool = false;
 	public var rating:String = "shit";
 
 	public var sustainLength:Float = 0;
@@ -64,12 +64,19 @@ class Note extends FlxSprite
 		switch (daStage)
 		{
 			case 'school' | 'schoolEvil':
-				loadGraphic(Paths.image('weeb/pixelUI/arrows-pixels', 'week6'), true, 17, 17);
+				loadGraphic(Paths.image('weeb/pixelUI/arrows-pixels', 'shared'), true, 17, 17);
 
 				animation.add('greenScroll', [6]);
 				animation.add('redScroll', [7]);
 				animation.add('blueScroll', [5]);
 				animation.add('purpleScroll', [4]);
+
+				if(Config.noteGlow){
+					animation.add('green glow', [22]);
+					animation.add('red glow', [23]);
+					animation.add('blue glow', [21]);
+					animation.add('purple glow', [20]);
+				}
 
 				if (isSustainNote)
 				{
@@ -98,7 +105,7 @@ class Note extends FlxSprite
 				animation.addByPrefix('blueScroll', 'blue0');
 				animation.addByPrefix('purpleScroll', 'purple0');
 
-				animation.addByPrefix('purpleholdend', 'purple end hold');
+				animation.addByPrefix('purpleholdend', 'pruple end hold');
 				animation.addByPrefix('greenholdend', 'green hold end');
 				animation.addByPrefix('redholdend', 'red hold end');
 				animation.addByPrefix('blueholdend', 'blue hold end');
@@ -107,6 +114,13 @@ class Note extends FlxSprite
 				animation.addByPrefix('greenhold', 'green hold piece');
 				animation.addByPrefix('redhold', 'red hold piece');
 				animation.addByPrefix('bluehold', 'blue hold piece');
+
+				if(Config.noteGlow){
+					animation.addByPrefix('purple glow', 'Purple Active');
+					animation.addByPrefix('green glow', 'Green Active');
+					animation.addByPrefix('red glow', 'Red Active');
+					animation.addByPrefix('blue glow', 'Blue Active');
+				}
 
 				setGraphicSize(Std.int(width * 0.7));
 				updateHitbox();
@@ -210,7 +224,7 @@ class Note extends FlxSprite
 				wasGoodHit = true;
 		}
 
-		if (canBeHit && !isSustainNote && !warning){
+		if (canBeHit && Config.noteGlow && !isSustainNote && !warning){
 			switch (noteData)
 			{
 				case 2:

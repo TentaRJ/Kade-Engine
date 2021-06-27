@@ -103,7 +103,14 @@ class ChartingState extends MusicBeatState
 		curSection = lastSection;
 
 		if (PlayState.SONG != null)
+		{
 			_song = PlayState.SONG;
+			// if(_song.badNotes != null)
+			// {
+			// 	_song.push(warning);
+			// 	_song.push(badNotes);
+			// }
+		}
 		else
 		{
 			_song = {
@@ -220,6 +227,14 @@ class ChartingState extends MusicBeatState
 		{
 			_song.needsVoices = check_voices.checked;
 			trace('CHECKED!');
+		};
+
+		var check_warning = new FlxUICheckBox(10, check_voices.y + 25, null, null, "Warning Notes?", 100);
+		check_warning.checked = _song.warning;
+		check_warning.callback = function()
+		{
+			_song.warning = check_warning.checked;
+			trace(_song.warning);
 		};
 
 		var check_mute_inst = new FlxUICheckBox(10, 200, null, null, "Mute Instrumental (in editor)", 100);
@@ -366,6 +381,7 @@ class ChartingState extends MusicBeatState
 		tab_group_song.add(UI_songTitle);
 		tab_group_song.add(restart);
 		tab_group_song.add(check_voices);
+		tab_group_song.add(check_warning);
 		tab_group_song.add(check_mute_inst);
 		tab_group_song.add(saveButton);
 		tab_group_song.add(reloadSong);
@@ -1445,16 +1461,13 @@ class ChartingState extends MusicBeatState
 		var noteSus = 0;
 
 		if (n != null)
-			if(FlxG.keys.pressed.B && _song.badNotes != null && _song.warning == true){_song.badNotes.push([n.strumTime, n.noteData, n.sustainLength]);trace("Added Warn Note!");}
+			if(FlxG.keys.pressed.B && _song.badNotes != null && _song.warning){_song.badNotes.push([n.strumTime, n.noteData]);trace("Added Warn Note!");}
 			else{_song.notes[curSection].sectionNotes.push([n.strumTime, n.noteData, n.sustainLength]);}
 		else
-			if(FlxG.keys.pressed.B && _song.badNotes != null && _song.warning == true){_song.badNotes.push([noteStrum, noteData, noteSus]);trace("Added Warn Note!");}
-			else{_song.notes[curSection].sectionNotes.push([noteStrum, noteData, noteSus]);}
+			if(FlxG.keys.pressed.B && _song.badNotes != null && _song.warning){_song.badNotes.push([noteStrum, noteData, noteSus]);trace("Added Warn Note!");}
+			else{_song.notes[curSection].sectionNotes.push([noteStrum, noteData]);}
 
-		var thingy = _song.notes[curSection].sectionNotes[_song.notes[curSection].sectionNotes.length - 1];
-		if(FlxG.keys.pressed.B){var thingy = _song.badNotes.push([noteStrum, noteData, noteSus]);}
-
-		curSelectedNote = thingy;
+		if(!FlxG.keys.pressed.B){curSelectedNote = _song.notes[curSection].sectionNotes[_song.notes[curSection].sectionNotes.length - 1];}
 
 		updateGrid();
 		updateNoteUI();

@@ -1,5 +1,6 @@
 package;
 
+import flixel.math.FlxRandom;
 import openfl.ui.KeyLocation;
 import openfl.events.Event;
 import haxe.EnumTools;
@@ -1529,6 +1530,9 @@ class PlayState extends MusicBeatState
 		// NEW SHIT
 		noteData = songData.notes;
 
+		// WARNING NOTE SHIT
+		var warningData = songData.badNotes;
+
 		var playerCounter:Int = 0;
 
 		// Per song offset check
@@ -1628,6 +1632,24 @@ class PlayState extends MusicBeatState
 
 		// trace(unspawnNotes.length);
 		// playerCounter += 1;
+
+		var beatStepTime = 600*(100/songData.bpm);
+
+		if (curSong == "Tutorial" && SONG.badNotes != null)
+		{
+			for (x in 0...SONG.badNotes.length)
+				{
+					trace("Loaded a warning note at " + SONG.badNotes[x]);
+					trace(SONG.badNotes[x][0]);
+					trace(SONG.badNotes[x][1]);
+					var warnNote:Note = new Note(SONG.badNotes[x][0], (SONG.badNotes[x][1]), null, false, true);
+					warnNote.scrollFactor.set();
+					unspawnNotes.push(warnNote);
+					warnNote.mustPress = true;
+					warnNote.x += FlxG.width / 2; // general offset
+				}
+		}
+		else{trace("ni fun :(");}
 
 		unspawnNotes.sort(sortByShit);
 
@@ -2538,7 +2560,7 @@ class PlayState extends MusicBeatState
 								{
 									spr.animation.play('confirm', true);
 								}
-								if (spr.animation.curAnim.name == 'confirm' && !curStage.startsWith('school'))
+								if (!curStage.startsWith('school'))
 								{
 									spr.centerOffsets();
 									spr.offset.x -= 13;
@@ -2603,7 +2625,18 @@ class PlayState extends MusicBeatState
 							}
 							else
 							{
-								if (loadRep && daNote.isSustainNote)
+								if (daNote.warning)
+								{
+									trace("warning note hit!");
+									switch (SONG.song.toLowerCase())
+									{
+										case "tutorial":
+										{
+											trace("splish");
+										}
+									}
+								}
+								else if (loadRep && daNote.isSustainNote)
 								{
 									// im tired and lazy this sucks I know i'm dumb
 									if (findByTime(daNote.strumTime) != null)
@@ -3124,6 +3157,21 @@ class PlayState extends MusicBeatState
 
 		private function keyShit():Void // I've invested in emma stocks
 			{
+				var up = controls.UP;
+				var right = controls.RIGHT;
+				var down = controls.DOWN;
+				var left = controls.LEFT;
+		
+				var upP = controls.UP_P;
+				var rightP = controls.RIGHT_P;
+				var downP = controls.DOWN_P;
+				var leftP = controls.LEFT_P;
+		
+				var upR = controls.UP_R;
+				var rightR = controls.RIGHT_R;
+				var downR = controls.DOWN_R;
+				var leftR = controls.LEFT_R;
+
 				// control arrays, order L D R U
 				var holdArray:Array<Bool> = [controls.LEFT, controls.DOWN, controls.UP, controls.RIGHT];
 				var pressArray:Array<Bool> = [
@@ -3298,21 +3346,21 @@ class PlayState extends MusicBeatState
 				}
 		 
 				playerStrums.forEach(function(spr:FlxSprite)
-				{
-					if (pressArray[spr.ID] && spr.animation.curAnim.name != 'confirm')
-						spr.animation.play('pressed');
-					if (!holdArray[spr.ID])
-						spr.animation.play('static');
-		 
-					if (spr.animation.curAnim.name == 'confirm' && !curStage.startsWith('school'))
 					{
-						spr.centerOffsets();
-						spr.offset.x -= 13;
-						spr.offset.y -= 13;
-					}
-					else
-						spr.centerOffsets();
-				});
+						if (pressArray[spr.ID])
+							spr.animation.play('pressed');
+						if (!holdArray[spr.ID])
+							spr.animation.play('static');
+				
+						if (!curStage.startsWith('school'))
+						{
+							spr.centerOffsets();
+							spr.offset.x -= 13;
+							spr.offset.y -= 13;
+						}
+						else
+							spr.centerOffsets();
+					});
 			}
 
 			public function findByTime(time:Float):Array<Dynamic>

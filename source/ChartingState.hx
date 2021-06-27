@@ -117,7 +117,9 @@ class ChartingState extends MusicBeatState
 				noteStyle: 'normal',
 				stage: 'stage',
 				speed: 1,
-				validScore: false
+				validScore: false,
+				warning : false,
+				badNotes: []
 			};
 		}
 
@@ -245,6 +247,11 @@ class ChartingState extends MusicBeatState
 		var reloadSongJson:FlxButton = new FlxButton(reloadSong.x, saveButton.y + 30, "Reload JSON", function()
 		{
 			loadJson(_song.song.toLowerCase());
+		});
+
+		var warningButton:FlxButton = new FlxButton(reloadSongJson.x + saveButton.width + 10, reloadSongJson.y, "Reload Audio", function()
+		{
+			loadSong(_song.song);
 		});
 
 		
@@ -1203,6 +1210,7 @@ class ChartingState extends MusicBeatState
 		}
 
 		var sectionInfo:Array<Dynamic> = _song.notes[curSection].sectionNotes;
+		var badInfo:Array<Dynamic> = _song.badNotes;
 
 		if (_song.notes[curSection].changeBPM && _song.notes[curSection].bpm > 0)
 		{
@@ -1239,7 +1247,7 @@ class ChartingState extends MusicBeatState
 			var daStrumTime = i[0];
 			var daSus = i[2];
 
-			var note:Note = new Note(daStrumTime, daNoteInfo % 4,null,false,true);
+			var note:Note = new Note(daStrumTime, daNoteInfo % 4,null,false,false);
 			note.sustainLength = daSus;
 			note.setGraphicSize(GRID_SIZE, GRID_SIZE);
 			note.updateHitbox();
@@ -1257,6 +1265,36 @@ class ChartingState extends MusicBeatState
 				var sustainVis:FlxSprite = new FlxSprite(note.x + (GRID_SIZE / 2),
 					note.y + GRID_SIZE).makeGraphic(8, Math.floor(FlxMath.remapToRange(daSus, 0, Conductor.stepCrochet * _song.notes[curSection].lengthInSteps, 0, gridBG.height)));
 				curRenderedSustains.add(sustainVis);
+			}
+		}
+
+		trace("bad notes" + badInfo);
+		if(badInfo != null){
+		for (i in badInfo)
+			{
+				var daNoteInfo = i[1];
+				var daStrumTime = i[0];
+				var daSus = i[2];
+	
+				var note:Note = new Note(daStrumTime, daNoteInfo % 4,null,false,true);
+				note.sustainLength = daSus;
+				note.setGraphicSize(GRID_SIZE, GRID_SIZE);
+				note.updateHitbox();
+				note.x = Math.floor(daNoteInfo * GRID_SIZE);
+				note.y = Math.floor(getYfromStrum((daStrumTime - sectionStartTime()) % (Conductor.stepCrochet * _song.notes[curSection].lengthInSteps)));
+	
+				if (curSelectedNote != null)
+					if (curSelectedNote[0] == note.strumTime)
+						lastNote = note;
+	
+				curRenderedNotes.add(note);
+	
+				if (daSus > 0)
+				{
+					var sustainVis:FlxSprite = new FlxSprite(note.x + (GRID_SIZE / 2),
+						note.y + GRID_SIZE).makeGraphic(8, Math.floor(FlxMath.remapToRange(daSus, 0, Conductor.stepCrochet * _song.notes[curSection].lengthInSteps, 0, gridBG.height)));
+					curRenderedSustains.add(sustainVis);
+				}
 			}
 		}
 	}
@@ -1298,12 +1336,24 @@ class ChartingState extends MusicBeatState
 	function deleteNote(note:Note):Void
 		{
 			lastNote = note;
+			if(FlxG.keys.pressed.B && _song.badNotes != null){
+				trace("Lets delete a bad note");
+				for (i in _song.badNotes)
+					{
+						if (i[0] == note.strumTime && i[1] % 4 == note.noteData)
+						{
+							_song.badNotes.remove(i);
+						}
+					}
+			}
+			else{
 			for (i in _song.notes[curSection].sectionNotes)
 			{
 				if (i[0] == note.strumTime && i[1] % 4 == note.noteData)
 				{
 					_song.notes[curSection].sectionNotes.remove(i);
 				}
+			}
 			}
 	
 			updateGrid();
@@ -1395,11 +1445,14 @@ class ChartingState extends MusicBeatState
 		var noteSus = 0;
 
 		if (n != null)
-			_song.notes[curSection].sectionNotes.push([n.strumTime, n.noteData, n.sustainLength]);
+			if(FlxG.keys.pressed.B && _song.badNotes != null && _song.warning == true){_song.badNotes.push([n.strumTime, n.noteData, n.sustainLength]);trace("Added Warn Note!");}
+			else{_song.notes[curSection].sectionNotes.push([n.strumTime, n.noteData, n.sustainLength]);}
 		else
-			_song.notes[curSection].sectionNotes.push([noteStrum, noteData, noteSus]);
+			if(FlxG.keys.pressed.B && _song.badNotes != null && _song.warning == true){_song.badNotes.push([noteStrum, noteData, noteSus]);trace("Added Warn Note!");}
+			else{_song.notes[curSection].sectionNotes.push([noteStrum, noteData, noteSus]);}
 
 		var thingy = _song.notes[curSection].sectionNotes[_song.notes[curSection].sectionNotes.length - 1];
+		if(FlxG.keys.pressed.B){var thingy = _song.badNotes.push([noteStrum, noteData, noteSus]);}
 
 		curSelectedNote = thingy;
 
